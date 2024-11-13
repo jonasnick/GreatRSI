@@ -49,9 +49,10 @@ namespace Covenant
 -- NOTE: CHECKSIG assumes the following stack (top to bottom): `<pk> <R:s>`
 def CHALHASH_VERIFY := [Op._1ADD,
                         Op.PUSH Schnorr.G,
+                        Op.TUCK,
                         Op.SWAP,
                         Op.CAT,
-                        Op.PUSH Schnorr.G,
+                        Op.SWAP,
                         Op.CHECKSIGVERIFY]
 
 namespace Test
