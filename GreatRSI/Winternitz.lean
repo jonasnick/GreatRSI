@@ -92,9 +92,12 @@ def checksum (M: List UInt8): List UInt8 :=
 
 #guard checksum (base16 (List.replicate 32 0x00.toUInt8).toByteArray) == [3, 12, 0]
 
-def witnernitz (M: ByteArray) (xs: List ByteArray) (randomization: List ByteArray) (seed: ByteArray) (verify: Bool): List ByteArray :=
+def winternitzdigits (M: ByteArray) : List UInt8 :=
   let M' := base16 M
-  let B := M'.append (checksum M')
+  M'.append (checksum M')
+
+def witnernitz (M: ByteArray) (xs: List ByteArray) (randomization: List ByteArray) (seed: ByteArray) (verify: Bool): List ByteArray :=
+  let B := winternitzdigits M
   assert! B.length == len
   let B' := B.map (if verify then fun b => w - 1 - b.toNat else fun b => b.toNat)
   let r := fun b => if !verify then w - 1 - b else 0
