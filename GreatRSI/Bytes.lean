@@ -11,9 +11,11 @@ instance : BEq ByteArray where
 def flatten (l: List ByteArray): ByteArray :=
   l.foldl (fun acc l' => acc ++ l') ByteArray.empty
 
+-- Shorter operand is implicitly filled up with 0s
 def ByteArray.xor (b1: ByteArray) (b2: ByteArray): ByteArray :=
   let b := b1.data.zip b2.data
-  { data := b.map (fun b => b.1 ^^^ b.2)}
+  let trailing := if b1.size > b2.size then (b1.toList.drop b2.size) else (b2.toList.drop b1.size)
+  { data := b.map (fun b => b.1 ^^^ b.2) ++ trailing}
 
 -- little endian
 def ByteArray.toNat (ele: ByteArray) : Nat :=
