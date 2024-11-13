@@ -19,6 +19,11 @@ def readSecfile (filename: String): IO (ByteArray × List ByteArray × Winternit
   let seckey := Winternitz.ByteArray.parseSeckey seckeyBytes
   return (seed, randomizer, seckey)
 
+def hexarray (args: List ByteArray) : List String :=
+  match args with
+  | [] => []
+  | a :: as => a.toHex :: (hexarray as)
+
 def main (args: List String): IO Unit := do
   if h : 0 < args.length then
     let cmd := args[0]'h
@@ -32,6 +37,21 @@ def main (args: List String): IO Unit := do
         outFile.write secbytes
       else
         IO.println helpMessage
+    | "secretparse" =>
+      if h : 1 < args.length then
+        let input := args[1]'h
+        let (seed, randomizer, seckey) ← readSecfile input
+        IO.println s!"seed: {seed.toHex}"
+        IO.println s!"randomization: {hexarray randomizer}"
+        IO.println s!"secret: {hexarray seckey}"
+    | "pubkeyparse" =>
+      if h : 1 < args.length then
+        let input := args[1]'h
+        let (seed, randomizer, seckey) ← readSecfile input
+        let pk := Winternitz.keygen seckey randomizer seed
+        IO.println s!"seed: {pk.seed.toHex}"
+        IO.println s!"randomization: {hexarray pk.randomization}"
+        IO.println s!"hashes: {hexarray ([pk.hashes[64]!, pk.hashes[65]!, pk.hashes[66]!] ++ (pk.hashes.take 64))}"
     | "scriptgen" =>
       if h : 2 < args.length then
         let input := args[1]!
@@ -62,6 +82,14 @@ def main (args: List String): IO Unit := do
         let outFile ← IO.FS.Handle.mk output IO.FS.Mode.write
         assert! Stack.parse (witness.serialize) == some witness
         outFile.write witness.serialize
+    | "witnessparse" =>
+      if h : 1 < args.length then
+        let input := args[1]'h
+        let witnessFile ← IO.FS.Handle.mk input IO.FS.Mode.read
+        let witnessBytes ← witnessFile.readBinToEnd
+        match Stack.parse witnessBytes with
+        | none => IO.println "Invalid witness"
+        | some witness => IO.println s!"{hexarray witness}"
     | "verify" =>
       -- read script file and witness file, and sighash
       if h : 3 < args.length then
