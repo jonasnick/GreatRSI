@@ -96,7 +96,7 @@ def winternitzdigits (M: ByteArray) : List UInt8 :=
   let M' := base16 M
   M'.append (checksum M')
 
-def witnernitz (M: ByteArray) (xs: List ByteArray) (randomization: List ByteArray) (seed: ByteArray) (verify: Bool): List ByteArray :=
+def winternitz (M: ByteArray) (xs: List ByteArray) (randomization: List ByteArray) (seed: ByteArray) (verify: Bool): List ByteArray :=
   let B := winternitzdigits M
   assert! B.length == len
   let B' := B.map (if verify then fun b => w - 1 - b.toNat else fun b => b.toNat)
@@ -105,11 +105,11 @@ def witnernitz (M: ByteArray) (xs: List ByteArray) (randomization: List ByteArra
   zipped.foldl (fun acc z => (acc ++ [(chain z.1 z.2 seed (List.drop (r z.2) randomization))])) []
 
 def sign (M: ByteArray) (sk: Seckey) (randomization: List ByteArray) (seed: ByteArray): List ByteArray :=
-  witnernitz M sk randomization seed false
+  winternitz M sk randomization seed false
 
 def pk_from_sig (M: ByteArray) (sig: List ByteArray) (randomization: List ByteArray) (seed: ByteArray): ByteArray :=
   let pk_0 := seed.append (flatten randomization)
-  let pk_i :=  witnernitz M sig randomization seed true
+  let pk_i :=  winternitz M sig randomization seed true
   pk_0.append (flatten pk_i)
 
 namespace Test
