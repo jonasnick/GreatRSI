@@ -56,11 +56,12 @@ def CHALHASH_VERIFY := [Op._1ADD,
                         Op.CHECKSIGVERIFY]
 
 namespace Test
-#guard Script.verify Covenant.CHALHASH_VERIFY [] zero == false
-#guard Script.verify Covenant.CHALHASH_VERIFY [[1].toByteArray] [1].toByteArray == false
+#guard !Script.verify Covenant.CHALHASH_VERIFY [] zero
+#guard !Script.verify Covenant.CHALHASH_VERIFY [[1].toByteArray] [1].toByteArray
 def sighash := (List.replicate 32 0xab).toByteArray
 def instack := [Schnorr.challenge_cat_trick sighash]
-#guard Script.verify (Covenant.CHALHASH_VERIFY ++ [Op.PUSH one]) instack sighash == true
+#guard Script.verify (Covenant.CHALHASH_VERIFY ++ [Op.PUSH one]) instack sighash
+#guard !Script.verify (Covenant.CHALHASH_VERIFY ++ [Op.PUSH one]) instack (List.replicate 32 0xbb).toByteArray
 end Test
 end Covenant
 
