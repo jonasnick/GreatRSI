@@ -110,7 +110,7 @@ def t2 := match (Script.run ((base16 32) ++ (checksum 32)) (ExecCtx.new [M] sigh
 #guard t2
 
 -- stack: `<digit1> <preimage1> <seed> <randomizers> ...`
-def chain (pk_hash: ByteArray): Script :=
+def chain: Script :=
   ((List.range 15).reverse.map (fun i =>
   [Op.DUP, Op.NOT, Op.IF,
   -- `<digit> <preimage> <seed>`
@@ -132,8 +132,8 @@ def chain (pk_hash: ByteArray): Script :=
   -- `<digit> <hash> <seed>`
   Op.ELSE, Op._1SUB, Op.ENDIF]
   )).join
-  ++ [Op.DROP, Op.PUSH pk_hash]
-  ++ [Op.EQUALVERIFY]
+  ++ [Op.DROP]
+  ++ [Op.TOALTSTACK]
 
 def CHECKWOTS (pk: Winternitz.Pubkey): Script :=
   -- check that the top stack element is sighash (or more precisely, the challenge hash)
@@ -149,9 +149,20 @@ def CHECKWOTS (pk: Winternitz.Pubkey): Script :=
       -- obtain digit
       Op.PUSH [15 + 1 + 1].toByteArray, Op.ROLL]
       -- checksum digits are higher on the stack than message digits
-      ++ chain (pk.hashes[if i < 3 then Winternitz.len_1 + i else i - Winternitz.len_2]!)
+      ++ chain
       )).join
   ++ List.replicate (15 + 1) Op.DROP
+  -- altstack `<pk.hashes[63]> ... <pk.hashes[0]> <pk.hashes[66]> ... <pk.hashes[64]>
+  ++ List.replicate Winternitz.len Op.FROMALTSTACK
+  -- stack `<pk.hashes[64]> ... <pk.hashes[66]> <pk.hashes[0]> ... <pk.hashes[63]>
+  ++ List.replicate (Winternitz.len - 1) Op.CAT
+  -- stack `<pk.hashes[63] || ... || pk.hashes[0] || pk.hashes[66] || ... || pk.hashes[64]>`
+  ++ [Op.SHA256]
+  ++ [Op.PUSH (sha256 (flatten ((List.range Winternitz.len).map (fun i =>
+        if i < 64 then pk.hashes[63 - i]!
+        else pk.hashes[66 + 64 - i]!
+        ))))]
+  ++ [Op.EQUALVERIFY]
   ++ [Op.PUSH [1].toByteArray]
 
 -- `<M> <sig[64]> ... <sig[66]> <sig[0]> ... <sig[63]>`

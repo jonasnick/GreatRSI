@@ -77,8 +77,8 @@ du -h --apparent-size scriptfile witnessfile
 
 **Output:**
 ```
-22K	scriptfile
-2.1K	witnessfile
+20K	scriptfile
+2.2K	witnessfile
 ```
 
 ### Parse a script
