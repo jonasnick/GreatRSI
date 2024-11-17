@@ -20,9 +20,7 @@ def readSecfile (filename: String): IO (ByteArray × List ByteArray × Winternit
   return (seed, randomizer, seckey)
 
 def hexarray (args: List ByteArray) : List String :=
-  match args with
-  | [] => []
-  | a :: as => a.toHex :: (hexarray as)
+  args.map (fun x => x.toHex)
 
 def main (args: List String): IO Unit := do
   if h : 0 < args.length then
@@ -37,21 +35,16 @@ def main (args: List String): IO Unit := do
         outFile.write secbytes
       else
         IO.println helpMessage
-    | "secretparse" =>
-      if h : 1 < args.length then
-        let input := args[1]'h
-        let (seed, randomizer, seckey) ← readSecfile input
-        IO.println s!"seed: {seed.toHex}"
-        IO.println s!"randomization: {hexarray randomizer}"
-        IO.println s!"secret: {hexarray seckey}"
-    | "pubkeyparse" =>
+    | "keyparse" =>
       if h : 1 < args.length then
         let input := args[1]'h
         let (seed, randomizer, seckey) ← readSecfile input
         let pk := Winternitz.keygen seckey randomizer seed
         IO.println s!"seed: {pk.seed.toHex}"
         IO.println s!"randomization: {hexarray pk.randomization}"
+        IO.println s!"secret: {hexarray seckey}"
         IO.println s!"hashes: {hexarray ([pk.hashes[64]!, pk.hashes[65]!, pk.hashes[66]!] ++ (pk.hashes.take 64))}"
+        IO.println s!"Note that here the checksum hashes are displayed first (TODO)!"
     | "scriptgen" =>
       if h : 2 < args.length then
         let input := args[1]!
