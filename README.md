@@ -91,3 +91,12 @@ wots scriptparse scriptfile | head -c 100
 ```
 (some [OP_DUP, OP_1ADD, OP_PUSH(79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),
 ```
+
+```
+wots scriptparse ./script | grep -o SHA256 | wc -l
+```
+
+**Output:**
+```
+1005
+```
